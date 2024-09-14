@@ -20,6 +20,17 @@ run_in_new_terminal "node launchBrowser.spec.js"
 # Wait a bit for the browser to launch
 sleep 5
 
+# Display the notice
+echo "
+******************************************************************************
+*                                                                            *
+*                  IMPORTANT: LEAVE THIS WINDOW RUNNING                      *
+*                                                                            *
+*              Please check the other window for the menu options            *
+*                                                                            *
+******************************************************************************
+"
+
 while true; do
     echo "Please choose an option:"
     echo "1. Run login script"
