@@ -14,8 +14,17 @@ run_in_new_terminal() {
     fi
 }
 
-# Run launchBrowser in a new terminal window
-run_in_new_terminal "node launchBrowser.spec.js"
+# Run launchBrowser in a new terminal window and capture the process ID
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    browser_pid=$(osascript -e "tell app \"Terminal\" to do script \"cd $(pwd) && node launchBrowser.spec.js && exit\"")
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux (assuming GNOME Terminal)
+    browser_pid=$(gnome-terminal -- bash -c "cd $(pwd) && node launchBrowser.spec.js; exit" & echo $!)
+else
+    echo "Unsupported operating system"
+    exit 1
+fi
 
 # Wait a bit for the browser to launch
 sleep 5
@@ -51,7 +60,14 @@ while true; do
             exit 0
             ;;
         3)
-            echo "Exiting..."
+            echo "Closing browser window and exiting..."
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                osascript -e "tell application \"Terminal\" to close (every window whose id is $browser_pid)"
+            elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+                # Linux
+                kill $browser_pid
+            fi
             exit 0
             ;;
         *)
