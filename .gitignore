@@ -1,0 +1,51 @@
+.DS_Store
+EBCFOPlaywright.code-workspace
+sage-intacct/auth-state.json
+sage-intacct/bills.csv
+sage-intacct/error_transactions.csv
+sage-intacct/successful_transactions.csv
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# npm
+package-lock.json
+npm-debug.log
+
+# Node.js
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files
+.env
+.env.test
+.env.production
+
+# Temporary folders
+tmp/
+temp/
