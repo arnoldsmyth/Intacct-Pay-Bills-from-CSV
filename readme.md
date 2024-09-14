@@ -18,19 +18,20 @@ This project automates various tasks in Sage Intacct using Playwright, including
 -   npm (Node Package Manager)
 -   A valid Sage Intacct account
 -   Google Chrome, Chromium, or Brave Browser installed
+-   macOS (This project is built and tested on macOS. It may work on other operating systems, but functionality is not guaranteed.)
 
 ## Installation
 
 1. Clone this repository:
 
     ```
-    git clone https://github.com/your-username/intacct-playwright-automation.git
+    git clone https://github.com/arnoldsmyth/Intacct-Pay-Bills-from-CSV
     ```
 
 2. Navigate to the project directory:
 
     ```
-    cd intacct-playwright-automation/sage-intacct
+    cd Intacct-Pay-Bills-from-CSV/sage-intacct
     ```
 
 3. Install the dependencies:
@@ -48,44 +49,59 @@ This project automates various tasks in Sage Intacct using Playwright, including
     INTACCT_PASSWORD=your_password
     ```
 
-2. In the `launchBrowser.spec.js` file, set the correct path for your browser:
+2. In the `launchBrowser.spec.js` file, edit with a text editor to set the correct path for your browser. By default, it's set to:
     ```javascript
     const browserPath =
     	"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
     ```
+    This is the default path for Google Chrome on macOS. If you're using a different browser or operating system, you'll need to update this path accordingly.
 
 ## Usage
 
 1. Open a terminal and navigate to the `sage-intacct` directory.
 
-2. Launch the browser and keep it running:
-
-    ```
-    node launchBrowser.spec.js
-    ```
-
-3. Open a new terminal window, navigate to the `sage-intacct` directory, and run the login script:
-
-    ```
-    node login.spec.js
-    ```
-
-4. After successful login, run the bill payment automation:
-    ```
-    node payBill.spec.js
-    ```
-
-Alternatively, you can use the `run_project.sh` script to automate the process:
-
-1. Make the script executable:
+2. Make the `run_project.sh` script executable:
 
     ```
     chmod +x run_project.sh
     ```
 
-2. Run the script:
+3. Run the automation script:
     ```
     ./run_project.sh
+    ```
+
+The `run_project.sh` script automates the process of running the Intacct automation scripts. Here's what it does:
+
+1. Launches the browser by running `launchBrowser.spec.js` in a new terminal window.
+2. Waits for 5 seconds to allow the browser to fully launch.
+3. Presents the user with three options:
+    - Run login script
+    - Run payBill script
+    - Exit
+4. Based on the user's choice, it runs the appropriate script or exits.
+
+This script provides a convenient way to manage the automation process, allowing users to log in and process bills as needed.
+
+Note: This script is designed for macOS and Linux (GNOME) environments. Windows users may need to modify the script or run the Node.js scripts individually.
+
+Alternatively, you can run the scripts individually:
+
+1. Launch the browser and keep it running:
+
+    ```
+    node launchBrowser.spec.js
+    ```
+
+2. Open a new terminal window, navigate to the `sage-intacct` directory, and run the login script:
+
+    ```
+    node login.spec.js
+    ```
+
+3. After successful login, run the bill payment automation:
+    ```
+    node payBill.spec.js
     ```
 
 ## CSV File Format
