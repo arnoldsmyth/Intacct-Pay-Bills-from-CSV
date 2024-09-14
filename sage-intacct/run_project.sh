@@ -14,13 +14,24 @@ run_in_new_terminal() {
     fi
 }
 
-# Run launchBrowser in a new terminal window and capture the process ID
+# Create the notice message
+notice="
+******************************************************************************
+*                                                                            *
+*                  IMPORTANT: LEAVE THIS WINDOW RUNNING                      *
+*                                                                            *
+*              The main script is running in the other window                *
+*                                                                            *
+******************************************************************************
+"
+
+# Run launchBrowser with the notice in a new terminal window
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
-    browser_pid=$(osascript -e "tell app \"Terminal\" to do script \"cd $(pwd) && node launchBrowser.spec.js && exit\"")
+    browser_pid=$(osascript -e "tell app \"Terminal\" to do script \"cd $(pwd) && echo '$notice' && node launchBrowser.spec.js && exit\"")
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux (assuming GNOME Terminal)
-    browser_pid=$(gnome-terminal -- bash -c "cd $(pwd) && node launchBrowser.spec.js; exit" & echo $!)
+    browser_pid=$(gnome-terminal -- bash -c "cd $(pwd) && echo '$notice' && node launchBrowser.spec.js; exit" & echo $!)
 else
     echo "Unsupported operating system"
     exit 1
