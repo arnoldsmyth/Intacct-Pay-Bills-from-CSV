@@ -245,8 +245,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     for (const row of result.matchingPaymentRows) {
                         const invoiceNumber = row['Invoice number'];
                         if (!uniqueInvoiceNumbers.has(invoiceNumber)) {
-                            await checkInvoiceCheckbox(invoiceNumber, parentIframe);
-                            uniqueInvoiceNumbers.add(invoiceNumber);
+                            try {
+                                await checkInvoiceCheckbox(invoiceNumber, parentIframe);
+                                uniqueInvoiceNumbers.add(invoiceNumber);
+                            } catch (error) {
+                                console.error(`Error processing invoice ${invoiceNumber}:`, error.message);
+                                // The error has already been logged to CSV in checkInvoiceCheckbox
+                                break; // Exit the loop if an invoice is not found
+                            }
                         }
                     }
                     console.log(`Checked ${uniqueInvoiceNumbers.size} unique invoices`);
@@ -351,42 +357,72 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 })();
 
 async function checkInvoiceCheckbox(invoiceNumber, parentIframe) {
-    // Find the row index for the given invoice number
     const rowIndex = await findRowIndexForInvoice(invoiceNumber, parentIframe);
 
     if (rowIndex !== null) {
-        // console.log(`Found row index for invoice ${invoiceNumber}: ${rowIndex}`);
+        console.log(`Found row index for invoice ${invoiceNumber}: ${rowIndex}`);
         const checkboxSelector = `#_obj__PAYABLES_${rowIndex}_-_obj__SELECTED`;
         await parentIframe.locator(checkboxSelector).check();
         console.log(`Checked checkbox for invoice ${invoiceNumber}`);
     } else {
         console.log(`Could not find row for invoice ${invoiceNumber}`);
+        // Log to error CSV
+        appendToCsv(errorFileName, [
+            invoiceNumber,
+            'N/A',
+            'Error',
+            'Invoice not found in Intacct'
+        ]);
+        throw new Error(`Invoice ${invoiceNumber} not found in Intacct`);
     }
 }
 
 async function findRowIndexForInvoice(invoiceNumber, parentIframe) {
-    let rowIndex = 0;
+    try {
+        // First, determine the number of rows on the page
+        let rowCount = 0;
+        while (true) {
+            const selector = `#_obj__PAYABLES_${rowCount}_-_obj__RECORDID`;
+            const element = await parentIframe.locator(selector).first();
+            if (!(await element.count())) {
+                break; // Exit the loop when we can't find any more rows
+            }
+            rowCount++;
+        }
 
-    while (true) {
-        try {
-            // console.log(`Finding row index for invoice ${invoiceNumber}: ${rowIndex}`);
+        console.log(`Total rows on the page: ${rowCount}`);
+
+        // Now search through the existing rows
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
             const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
             const element = await parentIframe.locator(selector).first();
-            if (!element) {
-                return null; // Invoice not found
-            }
             const currentInvoiceNumber = await element.innerText();
+
             if (compareInvoiceNumbers(currentInvoiceNumber, invoiceNumber)) {
                 return rowIndex;
             }
-            rowIndex++;
-        } catch (error) {
-            if (error.message.includes('Timeout')) {
-                console.log('Timeout occurred while finding row index. Exiting script.');
-                process.exit(1);
-            }
-            throw error;
         }
+
+        // If we've searched all rows and haven't found a match
+        const errorMessage = `Invoice ${invoiceNumber} not found in ${rowCount} rows.`;
+        console.log(errorMessage);
+        appendToCsv(errorFileName, [
+            invoiceNumber,
+            'N/A',
+            'Error',
+            errorMessage
+        ]);
+        return null;
+    } catch (error) {
+        const errorMessage = `Error while searching for invoice ${invoiceNumber}: ${error.message}`;
+        console.error(errorMessage);
+        appendToCsv(errorFileName, [
+            invoiceNumber,
+            'N/A',
+            'Error',
+            errorMessage
+        ]);
+        return null;
     }
 }
 
