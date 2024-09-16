@@ -100,6 +100,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             console.log(`Do you want to process invoice number: ${invoiceNumber}?`);
             const shouldProcessInvoice = await promptToContinue();
             if (!shouldProcessInvoice) {
+                await clearFilter(parentIframe);
                 console.log('User chose to stop. Exiting script.');
                 process.exit(0);
             }
@@ -236,6 +237,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                             error.message
                         ]);
                         rowIndex++;
+                        await clearFilter(parentIframe);
                         break;
                     }
 
@@ -262,6 +264,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                             error.message
                         ]);
                         rowIndex++;
+                        await clearFilter(parentIframe);
                         break;
                     }
 
@@ -301,6 +304,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                                 unattendedInvoiceCount = 0;
                                 const shouldContinue = await promptToContinue();
                                 if (!shouldContinue) {
+                                    await clearFilter(parentIframe);
                                     console.log('User chose to stop. Exiting script.');
                                     process.exit(0);
                                 }
@@ -505,10 +509,10 @@ async function checkSelectedAmount(parentIframe, expectedAmount) {
             console.log(`✅ Selected amount (${selectedAmount}) matches the expected amount (${parsedExpectedAmount})`);
         } else {
             console.log(`❌ Mismatch in amounts: Selected (${selectedAmount}) vs Expected (${parsedExpectedAmount})`);
-            throw new Error('Selected amount does not match expected amount');
+            throw new Error(`Selected amount (${selectedAmount}) does not match expected amount (${parsedExpectedAmount})`);
         }
     } catch (error) {
-        console.error('Error in checkSelectedAmount:', error);
+        // console.error('Error in checkSelectedAmount:', error);
         throw error; // Re-throw the error to be caught by the caller
     }
 }
