@@ -8,6 +8,10 @@ const path = require('path');
 const successFileName = 'successful_transactions.csv';
 const errorFileName = 'error_transactions.csv';
 
+// Add these global variables at the top of the file
+let isUnattendedMode = false;
+let unattendedInvoiceCount = 0;
+let maxUnattendedInvoices = 5;
 
 function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     const normalize = (num) => num.replace(/^0+/, '');
@@ -15,6 +19,13 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 }
 
 (async () => {
+    // Add this at the beginning of the main function
+    const mode = await promptForMode();
+    if (mode === 'U') {
+        isUnattendedMode = true;
+        maxUnattendedInvoices = await promptForInvoiceCount();
+    }
+
     // Ensure CSV files exist
     ensureCsvExists(successFileName, ['Invoice Number', 'Payment Number', 'Status']);
     ensureCsvExists(errorFileName, ['Invoice Number', 'Payment Number', 'Status', 'Error Message']);
@@ -84,12 +95,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         // Log the summary of skipped invoices
         console.log(`Skipped ${rowIndex} invoices that have already been processed.`);
 
-        // Confirm to continue
-        console.log(`Do you want to process invoice number: ${invoiceNumber}?`);
-        const shouldProcessInvoice = await promptToContinue();
-        if (!shouldProcessInvoice) {
-            console.log('User chose to stop. Exiting script.');
-            process.exit(0);
+        // Replace the existing prompt with this condition
+        if (!isUnattendedMode) {
+            console.log(`Do you want to process invoice number: ${invoiceNumber}?`);
+            const shouldProcessInvoice = await promptToContinue();
+            if (!shouldProcessInvoice) {
+                console.log('User chose to stop. Exiting script.');
+                process.exit(0);
+            }
         }
 
         console.log(`Processing invoice number: ${invoiceNumber}`);
@@ -278,6 +291,23 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                             result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                             'Success'
                         ]);
+
+                        // Add this block to handle unattended mode limits
+                        if (isUnattendedMode) {
+                            unattendedInvoiceCount++;
+                            if (unattendedInvoiceCount >= maxUnattendedInvoices) {
+                                console.log(`Processed ${unattendedInvoiceCount} invoices in unattended mode. Pausing for input.`);
+                                isUnattendedMode = false;
+                                unattendedInvoiceCount = 0;
+                                const shouldContinue = await promptToContinue();
+                                if (!shouldContinue) {
+                                    console.log('User chose to stop. Exiting script.');
+                                    process.exit(0);
+                                }
+                                isUnattendedMode = true;
+                                maxUnattendedInvoices = await promptForInvoiceCount();
+                            }
+                        }
                     } else {
                         // Log skipped transaction to error CSV
                         console.log(`Skipped invoice: ${invoiceNumber}`);
@@ -294,7 +324,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
                     console.log('Filter cleared successfully');
 
-                    // Increment the row index for the next iteration
+                    // Reset the row index for the next iteration
                     rowIndex = 0;
                     break;
             }
@@ -310,15 +340,6 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             // Clear the filter
             await clearFilter(parentIframe);
         }
-
-        // // Add the prompt here, after processing each invoice
-        // const shouldContinue = await promptToContinue();
-        // if (!shouldContinue) {
-        //     console.log('User chose to stop. Exiting script.');
-        //     process.exit(0);
-        // }
-
-        // rowIndex++;
     }
 
     console.log('Step: Script completed successfully');
@@ -493,6 +514,12 @@ async function checkSelectedAmount(parentIframe, expectedAmount) {
 }
 
 async function promptForSave(parentIframe) {
+    if (isUnattendedMode) {
+        await parentIframe.locator('button:has-text("Save")').click();
+        console.log('Clicked Save button (Unattended mode)');
+        return true;
+    }
+
     console.log('Ready to Save? (Y/Enter to save, N to cancel)');
 
     const readline = require('readline').createInterface({
@@ -519,6 +546,10 @@ async function promptForSave(parentIframe) {
 }
 
 async function promptToContinue() {
+    if (isUnattendedMode) {
+        return true;
+    }
+
     console.log('Continue? (Y/Enter to continue, N to exit)');
 
     const readline = require('readline').createInterface({
@@ -578,4 +609,40 @@ async function clearFilter(parentIframe) {
     } catch (error) {
         console.error('Error clearing filter:', error);
     }
+}
+
+// Add these new functions at the end of the file
+async function promptForMode() {
+    console.log('Select mode: (A/Enter for Attended, U for Unattended)');
+    const readline = require('readline').createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const response = await new Promise(resolve => {
+        readline.question('', answer => {
+            readline.close();
+            resolve(answer.trim().toUpperCase());
+        });
+    });
+
+    return response === 'U' ? 'U' : 'A';
+}
+
+async function promptForInvoiceCount() {
+    console.log('Enter the number of invoices to process in unattended mode (default 5):');
+    const readline = require('readline').createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const response = await new Promise(resolve => {
+        readline.question('', answer => {
+            readline.close();
+            resolve(answer.trim());
+        });
+    });
+
+    const count = parseInt(response);
+    return isNaN(count) ? 5 : count;
 }
