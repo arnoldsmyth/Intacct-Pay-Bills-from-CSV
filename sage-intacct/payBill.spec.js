@@ -228,7 +228,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     try {
                         await selectPaymentMethod(paymentMethod, parentIframe, paymentDate, page);
                     } catch (error) {
-                        console.error('Error processing invoice:', error);
+                        // console.error('Error processing invoice:', error);
                         // Log error to CSV
                         appendToCsv(errorFileName, [
                             invoiceNumber,
@@ -255,7 +255,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     try {
                         await checkSelectedAmount(parentIframe, expectedAmount);
                     } catch (error) {
-                        console.error('Error processing invoice:', error);
+                        // console.error('Error processing invoice:', error);
                         // Log error to CSV
                         appendToCsv(errorFileName, [
                             invoiceNumber,
