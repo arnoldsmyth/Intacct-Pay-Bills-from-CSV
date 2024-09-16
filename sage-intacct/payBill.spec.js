@@ -270,7 +270,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
                     // Click the "Pay now" button
                     //delay 3 seconds
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 2000));
 
                     await parentIframe.locator('#paynowid').click();
                     console.log('Clicked "Pay now" button');
@@ -414,8 +414,12 @@ async function selectPaymentMethod(paymentMethod, parentIframe, paymentDate, pag
         await waitForLoading(parentIframe);
 
         if (optionValue === 'EFT') {
+            //pause 1 second
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await selectBank(parentIframe);
         } else if (optionValue === 'Credit Card') {
+            //pause 1 second
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await selectCreditCard(parentIframe);
         }
 
@@ -519,6 +523,7 @@ async function checkSelectedAmount(parentIframe, expectedAmount) {
 
 async function promptForSave(parentIframe) {
     if (isUnattendedMode) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
         await parentIframe.locator('button:has-text("Save")').click();
         console.log('Clicked Save button (Unattended mode)');
         return true;
@@ -537,7 +542,7 @@ async function promptForSave(parentIframe) {
             resolve(answer.trim().toLowerCase());
         });
     });
-
+    await new Promise(resolve => setTimeout(resolve, 2000));
     if (response === 'y' || response === '') {
         await parentIframe.locator('button:has-text("Save")').click();
         console.log('Clicked Save button');
