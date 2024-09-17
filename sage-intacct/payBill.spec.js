@@ -26,6 +26,9 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         maxUnattendedInvoices = await promptForInvoiceCount();
     }
 
+    // Prompt to decide whether to skip errors
+    const skipErrors = await promptToSkipErrors();
+
     // Ensure CSV files exist
     ensureCsvExists(successFileName, ['Invoice Number', 'Payment Number', 'Status']);
     ensureCsvExists(errorFileName, ['Invoice Number', 'Payment Number', 'Status', 'Error Message']);
@@ -82,13 +85,16 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             console.log('No more invoice numbers available. Exiting script.');
             process.exit(0);
         }
-        //check error file for invoice number and skip it in the browser if it exists
-        const errorRows = await readCsv(errorFileName);
-        const errorInvoiceNumbers = errorRows.map(row => row['Invoice Number'].replace(/^"|"$/g, '').trim()); // Adjust the key as needed
 
-        if (errorInvoiceNumbers.includes(invoiceNumber)) {
-            rowIndex++;
-            continue;
+        if (skipErrors) {
+            // Check error file for invoice number and skip it in the browser if it exists
+            const errorRows = await readCsv(errorFileName);
+            const errorInvoiceNumbers = errorRows.map(row => row['Invoice Number'].replace(/^"|"$/g, '').trim());
+
+            if (errorInvoiceNumbers.includes(invoiceNumber)) {
+                rowIndex++;
+                continue;
+            }
         }
 
         // Log the summary of skipped invoices
@@ -302,6 +308,11 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                             result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                             'Success'
                         ]);
+
+                        // Remove processed invoice from error file
+                        if (skipErrors) {
+                            await removeProcessedInvoiceFromErrors(invoiceNumber);
+                        }
 
                         // Add this block to handle unattended mode limits
                         if (isUnattendedMode) {
@@ -705,3 +716,34 @@ const readCsv = (filePath) => {
             .on('error', (error) => reject(error));
     });
 };
+
+// New function to prompt for skipping errors
+async function promptToSkipErrors() {
+    console.log('Do you want to skip processing invoices with errors? (Y/Enter to skip, N to check)');
+    const readline = require('readline').createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const response = await new Promise(resolve => {
+        readline.question('', answer => {
+            readline.close();
+            resolve(answer.trim().toLowerCase());
+        });
+    });
+
+    return response === 'y' || response === '';
+}
+
+// New function to remove processed invoice from error file
+async function removeProcessedInvoiceFromErrors(invoiceNumber) {
+    const errorRows = await readCsv(errorFileName);
+    const updatedErrors = errorRows.filter(row => row['Invoice Number'].replace(/^"|"$/g, '').trim() !== invoiceNumber);
+
+    // Rewrite the error file without the processed invoice
+    fs.writeFileSync(errorFileName, 'Invoice Number,Payment Number,Status,Error Message\n'); // Write headers
+    updatedErrors.forEach(row => {
+        const csvLine = `${row['Invoice Number']},${row['Payment Number']},${row['Status']},${row['Error Message']}\n`;
+        fs.appendFileSync(errorFileName, csvLine);
+    });
+}
