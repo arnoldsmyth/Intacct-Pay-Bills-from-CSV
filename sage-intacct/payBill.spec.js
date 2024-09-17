@@ -110,6 +110,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             // Click the Apply filter button
             await parentIframe.locator('button:has-text("Apply filter")').click();
             console.log(`Filter "${selectedFilter}" applied successfully.`);
+            await waitForLoading(parentIframe);
         }
 
         //get the invoice number we are processing
