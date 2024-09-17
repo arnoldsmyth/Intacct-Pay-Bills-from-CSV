@@ -102,7 +102,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         //if filter set is true, then apply the filter set
         if (filterSet && selectedFilter) {
             //select the filter set on the page
-            await selectFilterSet(parentIframe, selectedFilter);
+            // await selectFilterSet(parentIframe, selectedFilter);
+            await parentIframe.locator('#span__obj__ADVANCEDFILTER').click();
+
+            // Select the filter set
+            await parentIframe.locator(`#_c_obj__ADVANCEDFILTERsel option:has-text("${selectedFilter}")`).click();
+            // Click the Apply filter button
+            await parentIframe.locator('button:has-text("Apply filter")').click();
+            console.log(`Filter "${selectedFilter}" applied successfully.`);
         }
 
         //get the invoice number we are processing
