@@ -83,9 +83,8 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             process.exit(0);
         }
         //check error file for invoice number and skip it in the browser if it exists
-        const errorCsv = fs.readFileSync(errorFileName, 'utf8');
-        const errorRows = errorCsv.split('\n').map(row => row.split(','));
-        const errorInvoiceNumbers = errorRows.slice(1).map(row => row[0]); // Assuming Invoice Number is the first column
+        const errorRows = await readCsv(errorFileName);
+        const errorInvoiceNumbers = errorRows.map(row => row['Invoice Number'].replace(/^"|"$/g, '').trim()); // Adjust the key as needed
 
         if (errorInvoiceNumbers.includes(invoiceNumber)) {
             rowIndex++;
@@ -122,9 +121,11 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                 fs.createReadStream(csvFilePath)
                     .pipe(csv())
                     .on('data', (row) => {
-                        if (compareInvoiceNumbers(row['Invoice number'], invoiceNumber)) {
+                        // Strip quotes from invoice number
+                        const invoiceNumberFromCsv = row['Invoice number'].replace(/^"|"$/g, '').trim(); // Remove quotes and trim whitespace
+                        if (compareInvoiceNumbers(invoiceNumberFromCsv, invoiceNumber)) {
                             matchingInvoiceRow = row;
-                            paymentNumber = row['Payment number'];
+                            paymentNumber = row['Payment number'].replace(/^"|"$/g, ''); // Remove quotes from payment number
                             hasError = row['Error']?.toLowerCase() === 'true';
                             if (hasError) {
                                 errorMessage = row['Error Message'] || 'CSV Error - payment and payment number amounts dont match';
@@ -146,7 +147,8 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         fs.createReadStream(csvFilePath)
                             .pipe(csv())
                             .on('data', (row) => {
-                                if (row['Payment number'] === paymentNumber) {
+                                const paymentNumberFromCsv = row['Payment number'].replace(/^"|"$/g, ''); // Remove quotes from payment number
+                                if (paymentNumberFromCsv === paymentNumber) {
                                     matchingPaymentRows.push(row);
                                     if (row['Error']?.toLowerCase() === 'true') {
                                         hasError = true;
@@ -691,3 +693,15 @@ async function promptForInvoiceCount() {
     const count = parseInt(response);
     return isNaN(count) ? 5 : count;
 }
+
+// Replace the existing CSV reading logic with this
+const readCsv = (filePath) => {
+    return new Promise((resolve, reject) => {
+        const results = [];
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => resolve(results))
+            .on('error', (error) => reject(error));
+    });
+};
