@@ -28,6 +28,10 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         console.log('Continuing without reprocessing invoices in the error file.');
     }
 
+    // Ensure CSV files exist
+    ensureCsvExists(successFileName, ['Invoice Number', 'Payment Number', 'Status']);
+    ensureCsvExists(errorFileName, ['Invoice Number', 'Payment Number', 'Status', 'Error Message']);
+
     // Add this at the beginning of the main function
     const mode = await promptForMode();
     if (mode === 'U') {
@@ -35,9 +39,6 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         maxUnattendedInvoices = await promptForInvoiceCount();
     }
 
-    // Ensure CSV files exist
-    ensureCsvExists(successFileName, ['Invoice Number', 'Payment Number', 'Status']);
-    ensureCsvExists(errorFileName, ['Invoice Number', 'Payment Number', 'Status', 'Error Message']);
 
     // Connect to the existing browser instance with remote debugging port
     const browser = await chromium.connectOverCDP('http://localhost:9222');
