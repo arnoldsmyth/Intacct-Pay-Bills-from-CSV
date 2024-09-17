@@ -633,7 +633,18 @@ function appendToCsv(fileName, data) {
 // Ensure CSV files exist with headers
 function ensureCsvExists(fileName, headers) {
     if (!fs.existsSync(fileName)) {
+        // If the file does not exist, create it and write the headers
         fs.writeFileSync(fileName, headers.join(',') + '\n');
+    } else {
+        // If the file exists, check its contents
+        const fileContent = fs.readFileSync(fileName, 'utf8');
+        const existingHeaders = fileContent.split('\n')[0]; // Get the first line (headers)
+
+        // Check if the existing headers match the expected headers
+        if (existingHeaders !== headers.join(',')) {
+            // If they don't match, insert the headers at the top
+            fs.writeFileSync(fileName, headers.join(',') + '\n' + fileContent);
+        }
     }
 }
 
