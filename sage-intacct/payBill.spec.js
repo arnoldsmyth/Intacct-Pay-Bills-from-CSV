@@ -194,7 +194,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     console.log(`Skipping invoice ${invoiceNumber}: ${result.reason}`);
                     // Log skipped transaction to error CSV
                     appendToCsv(errorFileName, [
-                        invoiceNumber,
+                        `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                         result.paymentNumber || 'N/A',  // Include payment number if available
                         'Skipped',
                         result.reason
@@ -206,7 +206,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     console.log(`Error for invoice ${invoiceNumber}: ${result.reason}`);
                     // Log error to CSV
                     appendToCsv(errorFileName, [
-                        invoiceNumber,
+                        `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                         result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                         'Error',
                         result.reason
@@ -231,7 +231,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         // console.error('Error processing invoice:', error);
                         // Log error to CSV
                         appendToCsv(errorFileName, [
-                            invoiceNumber,
+                            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                             result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                             'Error',
                             error.message
@@ -264,7 +264,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         // console.error('Error processing invoice:', error);
                         // Log error to CSV
                         appendToCsv(errorFileName, [
-                            invoiceNumber,
+                            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                             result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                             'Error',
                             error.message
@@ -296,7 +296,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         // Log success after the save operation
                         console.log(`Successfully processed invoice: ${invoiceNumber}`);
                         appendToCsv(successFileName, [
-                            invoiceNumber,
+                            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                             result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                             'Success'
                         ]);
@@ -322,7 +322,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         // Log skipped transaction to error CSV
                         console.log(`Skipped invoice: ${invoiceNumber}`);
                         appendToCsv(errorFileName, [
-                            invoiceNumber,
+                            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                             result.matchingPaymentRows[0]?.['Payment number'] || 'N/A',
                             'Skipped',
                             'User cancelled the save operation'
@@ -342,7 +342,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             console.error('Error in findMatchingRows:', error);
             // Handle unexpected errors
             appendToCsv(errorFileName, [
-                invoiceNumber,
+                `"${invoiceNumber}"`,  // Wrap invoice number in quotes
                 'N/A',
                 'Error',
                 error.message
@@ -368,7 +368,7 @@ async function checkInvoiceCheckbox(invoiceNumber, parentIframe) {
         console.log(`Could not find row for invoice ${invoiceNumber}`);
         // Log to error CSV
         appendToCsv(errorFileName, [
-            invoiceNumber,
+            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
             'N/A',
             'Error',
             'Invoice not found in Intacct'
@@ -407,7 +407,7 @@ async function findRowIndexForInvoice(invoiceNumber, parentIframe) {
         const errorMessage = `Invoice ${invoiceNumber} not found in ${rowCount} rows.`;
         console.log(errorMessage);
         appendToCsv(errorFileName, [
-            invoiceNumber,
+            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
             'N/A',
             'Error',
             errorMessage
@@ -417,7 +417,7 @@ async function findRowIndexForInvoice(invoiceNumber, parentIframe) {
         const errorMessage = `Error while searching for invoice ${invoiceNumber}: ${error.message}`;
         console.error(errorMessage);
         appendToCsv(errorFileName, [
-            invoiceNumber,
+            `"${invoiceNumber}"`,  // Wrap invoice number in quotes
             'N/A',
             'Error',
             errorMessage
