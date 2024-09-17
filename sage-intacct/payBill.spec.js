@@ -50,6 +50,8 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         // Ask for filter input at the beginning
         const filterOptions = generateFilterOptions();
         selectedFilter = await promptUserForFilterSet(filterOptions);
+        await selectFilterSet(parentIframe, selectedFilter);
+        console.log('Selected filter set:', selectedFilter);
     }
 
     // Connect to the existing browser instance with remote debugging port
@@ -98,20 +100,6 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     let invoiceNumber;
 
     while (true) {
-        console.log('selectedFilter', selectedFilter);
-        //if filter set is true, then apply the filter set
-        if (filterSet && selectedFilter) {
-            //select the filter set on the page
-            // await selectFilterSet(parentIframe, selectedFilter);
-            await parentIframe.locator('#span__obj__ADVANCEDFILTER').click();
-
-            // Select the filter set
-            await parentIframe.locator(`#_c_obj__ADVANCEDFILTERsel option:has-text("${selectedFilter}")`).click();
-            // Click the Apply filter button
-            await parentIframe.locator('button:has-text("Apply filter")').click();
-            console.log(`Filter "${selectedFilter}" applied successfully.`);
-            await waitForLoading(parentIframe);
-        }
 
         //get the invoice number we are processing
         invoiceNumber = await getInvoiceNumber(rowIndex);
@@ -131,7 +119,12 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
         // Log the summary of skipped invoices
         console.log(`Skipped ${rowIndex} invoices that have already been processed.`);
+        //if filter set is true, then apply the filter set
+        if (filterSet && selectedFilter && rowIndex > 0) { //we ignore on the first pass as it was previously set
+            //select the filter set on the page
+            await selectFilterSet(parentIframe, selectedFilter);
 
+        }
         // Replace the existing prompt with this condition
         if (!isUnattendedMode) {
             console.log(`Do you want to process invoice number: ${invoiceNumber}?`);
