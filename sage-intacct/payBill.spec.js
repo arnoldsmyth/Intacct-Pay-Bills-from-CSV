@@ -42,8 +42,6 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         isUnattendedMode = true;
         maxUnattendedInvoices = await promptForInvoiceCount();
     }
-    // Access the parent iframe using frameLocator
-    const parentIframe = page.frameLocator('#iamain');
 
     //prompt for filter set
     const filterSet = await promptForFilterSet();
@@ -52,8 +50,6 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         // Ask for filter input at the beginning
         const filterOptions = generateFilterOptions();
         selectedFilter = await promptUserForFilterSet(filterOptions);
-        await selectFilterSet(parentIframe, selectedFilter);
-        console.log('Selected filter set:', selectedFilter);
     }
 
     // Connect to the existing browser instance with remote debugging port
@@ -79,8 +75,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         await browser.close();
         process.exit(1);
     }
+    // Access the parent iframe using frameLocator
+    const parentIframe = page.frameLocator('#iamain');
+    //apply the filter set
+    if (filterSet && selectedFilter) {
+        //select the filter set on the page
+        await selectFilterSet(parentIframe, selectedFilter);
 
-
+    }
     // Function to get invoice number from a specific row
     async function getInvoiceNumber(rowIndex) {
         try {
