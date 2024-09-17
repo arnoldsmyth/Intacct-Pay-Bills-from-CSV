@@ -344,8 +344,6 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     // Clear the filter
                     await clearFilter(parentIframe);
 
-                    console.log('Filter cleared successfully');
-
                     // Reset the row index for the next iteration
                     rowIndex = 0;
                     break;
@@ -728,7 +726,7 @@ const readCsv = (filePath) => {
 };
 
 async function promptForReprocessErrors() {
-    console.log('Do you want to reprocess invoices in the error file? (Y/Enter for Yes, N for No)');
+    console.log('Do you want to reprocess invoices in the error file? (N/Enter for No, Y for Yes)');
     const readline = require('readline').createInterface({
         input: process.stdin,
         output: process.stdout
@@ -741,5 +739,6 @@ async function promptForReprocessErrors() {
         });
     });
 
-    return response === 'y' || response === '';
+    // Set default to 'N' if the response is not 'y'
+    return response === 'y';
 }
