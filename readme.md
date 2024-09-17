@@ -81,6 +81,11 @@ The `run_project.sh` script automates the process of running the Intacct automat
     - Exit
 4. Based on the user's choice, it runs the appropriate script or exits.
 
+When running the payBill script, you'll have the following options:
+
+-   **Unattended Mode**: Choose between attended and unattended mode. In unattended mode, you can specify the number of invoices to process automatically before pausing for user input.
+-   **Filter Sets**: Apply a filter set to process invoices for a specific month. Filter sets must be pre-configured in the Intacct Pay Bills screen in the format "MMM YYYY" (e.g., "Mar 2024").
+
 This script provides a convenient way to manage the automation process, allowing users to log in and process bills as needed.
 
 Note: This script is designed for macOS and Linux (GNOME) environments. Windows users may need to modify the script or run the Node.js scripts individually.
@@ -103,6 +108,8 @@ Alternatively, you can run the scripts individually:
     ```
     node payBill.spec.js
     ```
+
+When running `payBill.spec.js` individually, you'll be prompted to choose between attended and unattended mode, and whether to apply a filter set.
 
 ## CSV File Format
 

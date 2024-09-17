@@ -1,17 +1,21 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const csv = require('csv-parser');
-const csvFilePath = 'bills.csv';
 const path = require('path');
+const readline = require('readline');
+
+const csvFilePath = 'bills.csv';
 
 // Define file names
 const successFileName = 'successful_transactions.csv';
 const errorFileName = 'error_transactions.csv';
 
-// Add these global variables at the top of the file
-let isUnattendedMode = false;
+// Update these global variables
+let isUnattendedMode = true;
 let unattendedInvoiceCount = 0;
 let maxUnattendedInvoices = 5;
+
+let selectedFilter = null;
 
 function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     const normalize = (num) => num.replace(/^0+/, '');
@@ -39,6 +43,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         maxUnattendedInvoices = await promptForInvoiceCount();
     }
 
+    //prompt for filter set
+    const filterSet = await promptForFilterSet();
+
+    if (filterSet) {
+        // Ask for filter input at the beginning
+        const filterOptions = generateFilterOptions();
+        selectedFilter = await promptUserForFilterSet(filterOptions);
+    }
 
     // Connect to the existing browser instance with remote debugging port
     const browser = await chromium.connectOverCDP('http://localhost:9222');
@@ -86,6 +98,13 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     let invoiceNumber;
 
     while (true) {
+        console.log('selectedFilter', selectedFilter);
+        //if filter set is true, then apply the filter set
+        if (filterSet && selectedFilter) {
+            //select the filter set on the page
+            await selectFilterSet(parentIframe, selectedFilter);
+        }
+
         //get the invoice number we are processing
         invoiceNumber = await getInvoiceNumber(rowIndex);
         if (!invoiceNumber) {
@@ -94,11 +113,12 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         }
         //check error file for invoice number and skip it in the browser if it exists
         const errorRows = await readCsv(errorFileName);
-        const errorInvoiceNumbers = errorRows.map(row => row['Invoice Number'].replace(/^"|"$/g, '').trim()); // Adjust the key as needed
-
-        if (errorInvoiceNumbers.includes(invoiceNumber)) {
-            rowIndex++;
-            continue;
+        if (errorRows.length > 0) {
+            const errorInvoiceNumbers = errorRows.map(row => row['Invoice Number'].replace(/^"|"$/g, '').trim());
+            if (errorInvoiceNumbers.includes(invoiceNumber)) {
+                rowIndex++;
+                continue;
+            }
         }
 
         // Log the summary of skipped invoices
@@ -184,6 +204,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     });
             });
         };
+
 
         // Get the details of the first bill in the intacct list within the parent iframe and filter by vendor name
         const vendorName = await page.locator('iframe[name="iamain"]').contentFrame().locator(`[id="_obj__PAYABLES_${rowIndex}_-_obj__VENDORNAME"]`).innerText();
@@ -577,14 +598,14 @@ async function promptForSave(parentIframe) {
 
     console.log('Ready to Save? (Y/Enter to save, N to cancel)');
 
-    const readline = require('readline').createInterface({
+    const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
     const response = await new Promise(resolve => {
-        readline.question('', answer => {
-            readline.close();
+        rl.question('', answer => {
+            rl.close();
             resolve(answer.trim().toLowerCase());
         });
     });
@@ -607,14 +628,14 @@ async function promptToContinue() {
 
     console.log('Continue? (Y/Enter to continue, N to exit)');
 
-    const readline = require('readline').createInterface({
+    const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
     const response = await new Promise(resolve => {
-        readline.question('', answer => {
-            readline.close();
+        rl.question('', answer => {
+            rl.close();
             resolve(answer.trim().toLowerCase());
         });
     });
@@ -679,32 +700,32 @@ async function clearFilter(parentIframe) {
 
 // Add these new functions at the end of the file
 async function promptForMode() {
-    console.log('Select mode: (A/Enter for Attended, U for Unattended)');
-    const readline = require('readline').createInterface({
+    console.log('Select mode: (U/Enter for Unattended, A for Attended)');
+    const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
     const response = await new Promise(resolve => {
-        readline.question('', answer => {
-            readline.close();
+        rl.question('', answer => {
+            rl.close();
             resolve(answer.trim().toUpperCase());
         });
     });
 
-    return response === 'U' ? 'U' : 'A';
+    return response === 'A' ? 'A' : 'U';
 }
 
 async function promptForInvoiceCount() {
     console.log('Enter the number of invoices to process in unattended mode (default 5):');
-    const readline = require('readline').createInterface({
+    const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
     const response = await new Promise(resolve => {
-        readline.question('', answer => {
-            readline.close();
+        rl.question('', answer => {
+            rl.close();
             resolve(answer.trim());
         });
     });
@@ -727,14 +748,14 @@ const readCsv = (filePath) => {
 
 async function promptForReprocessErrors() {
     console.log('Do you want to reprocess invoices in the error file? (N/Enter for No, Y for Yes)');
-    const readline = require('readline').createInterface({
+    const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
     const response = await new Promise(resolve => {
-        readline.question('', answer => {
-            readline.close();
+        rl.question('', answer => {
+            rl.close();
             resolve(answer.trim().toLowerCase());
         });
     });
@@ -742,3 +763,77 @@ async function promptForReprocessErrors() {
     // Set default to 'N' if the response is not 'y'
     return response === 'y';
 }
+
+async function promptForFilterSet(parentIframe) {
+    //this should prompt the user if they want to apply a filterset
+    //default is y/enter
+    //return a true or false
+    console.log('Do you want to apply a filterSet? (Y/Enter for Yes, N for No)');
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const response = await new Promise(resolve => {
+        rl.question('', answer => {
+            rl.close();
+            resolve(answer.trim().toLowerCase());
+        });
+    });
+
+    return response === 'y' || response === '';
+}
+// Function to prompt user for filter selection
+const promptUserForFilterSet = async (options) => {
+    console.log('Select a filter set:');
+    options.forEach((option, index) => console.log(`${index + 1}: ${option}`));
+
+    const response = await chooseFilterSet();
+    const selectedIndex = parseInt(response) - 1;
+
+    if (selectedIndex >= 0 && selectedIndex < options.length) {
+        return options[selectedIndex];
+    } else {
+        console.log('Invalid selection. Please try again.');
+        return promptUserForFilterSet(options); // Recursively call if invalid input
+    }
+};
+const generateFilterOptions = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentDate = new Date();
+    const filterOptions = [];
+
+    for (let i = 0; i < 12; i++) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = months[date.getMonth()];
+        const year = date.getFullYear();
+        filterOptions.push(`${monthName} ${year}`);
+    }
+
+    return filterOptions;
+};
+//select the filterset on the page
+const selectFilterSet = async (parentIframe, selectedFilter) => {
+    // Click on the filter dropdown
+    await parentIframe.locator('#span__obj__ADVANCEDFILTER').click();
+
+    // Select the filter set
+    await parentIframe.locator(`#_c_obj__ADVANCEDFILTERsel option:has-text("${selectedFilter}")`).click();
+    // Click the Apply filter button
+    await parentIframe.locator('button:has-text("Apply filter")').click();
+    console.log(`Filter "${selectedFilter}" applied successfully.`);
+};
+
+const chooseFilterSet = () => {
+    return new Promise((resolve) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
+        rl.question('Enter your selection: ', (answer) => {
+            rl.close();
+            resolve(answer.trim());
+        });
+    });
+};
