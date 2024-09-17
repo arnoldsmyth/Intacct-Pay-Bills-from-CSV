@@ -42,6 +42,8 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         isUnattendedMode = true;
         maxUnattendedInvoices = await promptForInvoiceCount();
     }
+    // Access the parent iframe using frameLocator
+    const parentIframe = page.frameLocator('#iamain');
 
     //prompt for filter set
     const filterSet = await promptForFilterSet();
@@ -77,8 +79,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         await browser.close();
         process.exit(1);
     }
-    // Access the parent iframe using frameLocator
-    const parentIframe = page.frameLocator('#iamain');
+
 
     // Function to get invoice number from a specific row
     async function getInvoiceNumber(rowIndex) {
