@@ -84,7 +84,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
     }
     // Function to get invoice number from a specific row
-    async function getInvoiceNumber(rowIndex) {
+    async function getInvoiceNumber(rowIndex, parentIframe) {
         try {
             const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
             await parentIframe.locator(selector).first().waitFor({ state: 'visible', timeout: 10000 });
@@ -106,7 +106,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     while (true) {
 
         //get the invoice number we are processing
-        invoiceNumber = await getInvoiceNumber(rowIndex);
+        invoiceNumber = await getInvoiceNumber(rowIndex, parentIframe);
         if (!invoiceNumber) {
             console.log('No more invoice numbers available. Exiting script.');
             process.exit(0);
