@@ -123,13 +123,20 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
     while (true) {
 
+        //if filter set is true, then apply the filter set
+        if (filterSet && selectedFilter && rowIndex > 0) { //we ignore on the first pass as it was previously set
+            //select the filter set on the page
+            await selectFilterSet(parentIframe, selectedFilter);
+
+        }
+
         //get the invoice number we are processing
         invoiceNumber = await getInvoiceNumber(rowIndex, parentIframe);
         if (invoiceNumber === null) {
-            console.log('Reached the end, going back to 0');
-            rowIndex = 0;
-            continue; // or process.exit(0);
+            console.log('No more invoice numbers available. Exiting script.');
+            break; // or process.exit(0);
         }
+
         //check error file for invoice number and skip it in the browser if it exists
         const errorRows = await readCsv(errorFileName);
         if (errorRows.length > 0) {
@@ -142,12 +149,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
         // Log the summary of skipped invoices
         console.log(`Skipped ${rowIndex} invoices that have already been processed.`);
-        //if filter set is true, then apply the filter set
-        if (filterSet && selectedFilter && rowIndex > 0) { //we ignore on the first pass as it was previously set
-            //select the filter set on the page
-            await selectFilterSet(parentIframe, selectedFilter);
 
-        }
         // Replace the existing prompt with this condition
         if (!isUnattendedMode) {
             console.log(`Do you want to process invoice number: ${invoiceNumber}?`);
