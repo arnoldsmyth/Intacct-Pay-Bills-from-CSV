@@ -862,9 +862,9 @@ async function promptToContinue() {
                                 console.log(`Processed ${unattendedInvoiceCount} invoices in unattended mode. Pausing for input.`);
                                 isUnattendedMode = false;
                                 unattendedInvoiceCount = 0;
+                                await clearVendorFilter(parentIframe);
                                 const shouldContinue = await promptToContinue();
                                 if (!shouldContinue) {
-                                    await clearVendorFilter(parentIframe);
                                     console.log('User chose to stop. Exiting script.');
                                     process.exit(0);
                                 }
