@@ -92,18 +92,21 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     }
     // Function to get invoice number from a specific row
     async function getInvoiceNumber(rowIndex, parentIframe) {
-        console.log(`Attempting to get invoice number for row ${rowIndex}`);
         try {
             const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
-            console.log(`Waiting for selector: ${selector}`);
+            // First, check if the element exists
+            const elementExists = await parentIframe.locator(selector).first().count() > 0;
+
+            if (!elementExists) {
+                console.error(`No more rows found at index ${rowIndex}. Returning null.`);
+                return null;
+            }
+
             await parentIframe.locator(selector).first().waitFor({ state: 'visible', timeout: 10000 });
-            console.log('Element found, getting inner text');
             const element = parentIframe.locator(selector).first();
             const invoiceNumber = await element.innerText();
-            console.log(`Invoice number retrieved: ${invoiceNumber}`);
             return invoiceNumber;
         } catch (error) {
-            console.error(`Error in getInvoiceNumber: ${error.message}`);
             if (error.message.includes('Timeout')) {
                 console.log('Timeout occurred while getting invoice number. Exiting script.');
                 process.exit(1);
@@ -119,9 +122,9 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
         //get the invoice number we are processing
         invoiceNumber = await getInvoiceNumber(rowIndex, parentIframe);
-        if (!invoiceNumber) {
+        if (invoiceNumber === null) {
             console.log('No more invoice numbers available. Exiting script.');
-            process.exit(0);
+            break; // or process.exit(0);
         }
         //check error file for invoice number and skip it in the browser if it exists
         const errorRows = await readCsv(errorFileName);
