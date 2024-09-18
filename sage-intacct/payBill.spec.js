@@ -78,16 +78,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     // Add this function near the top of your file, after the initial imports and constants
     async function getCorrectFrame(page) {
         const mainFrame = page.frameLocator('#iamain');
-        const yuiFrame = mainFrame.frameLocator('#_yuiResizeMonitor');
-
-        try {
-            // Attempt to access the yuiFrame with a short timeout
-            await yuiFrame.locator('body').waitFor({ state: 'attached', timeout: 2000 });
-            return yuiFrame;
-        } catch (error) {
-            // If the yuiFrame is not found, return the mainFrame
-            return mainFrame;
-        }
+        return mainFrame;
     }
 
     // Replace line 79 with this:
