@@ -80,10 +80,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         const mainFrame = page.frameLocator('#iamain');
         const yuiFrame = mainFrame.frameLocator('#_yuiResizeMonitor');
 
-        // Check if the _yuiResizeMonitor iframe exists
-        const yuiFrameExists = await yuiFrame.locator('body').count() > 0;
-
-        return yuiFrameExists ? yuiFrame : mainFrame;
+        try {
+            // Attempt to access the yuiFrame with a short timeout
+            await yuiFrame.locator('body').waitFor({ state: 'attached', timeout: 2000 });
+            return yuiFrame;
+        } catch (error) {
+            // If the yuiFrame is not found, return the mainFrame
+            return mainFrame;
+        }
     }
 
     // Replace line 79 with this:
