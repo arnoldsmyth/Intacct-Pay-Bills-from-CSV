@@ -75,8 +75,20 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         await browser.close();
         process.exit(1);
     }
-    // Access the parent iframe using frameLocator
-    const parentIframe = page.frameLocator('#iamain');
+    // Add this function near the top of your file, after the initial imports and constants
+    async function getCorrectFrame(page) {
+        const mainFrame = page.frameLocator('#iamain');
+        const yuiFrame = mainFrame.frameLocator('#_yuiResizeMonitor');
+
+        // Check if the _yuiResizeMonitor iframe exists
+        const yuiFrameExists = await yuiFrame.locator('body').count() > 0;
+
+        return yuiFrameExists ? yuiFrame : mainFrame;
+    }
+
+    // Replace line 79 with this:
+    const parentIframe = await getCorrectFrame(page);
+
     //apply the filter set
     if (filterSet && selectedFilter) {
         //select the filter set on the page
@@ -212,14 +224,14 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
 
         // Get the details of the first bill in the intacct list within the parent iframe and filter by vendor name
-        const vendorName = await page.locator('iframe[name="iamain"]').contentFrame().locator(`[id="_obj__PAYABLES_${rowIndex}_-_obj__VENDORNAME"]`).innerText();
-        await page.locator('iframe[name="iamain"]').contentFrame().locator('[id="_obj__VENDORIDRANGESTART_D"]').fill(vendorName);
+        const vendorName = await parentIframe.locator(`[id="_obj__PAYABLES_${rowIndex}_-_obj__VENDORNAME"]`).innerText();
+        await parentIframe.locator('[id="_obj__VENDORIDRANGESTART_D"]').fill(vendorName);
 
         // Click the Apply filter button
-        await page.locator('iframe[name="iamain"]').contentFrame().getByRole('button', { name: 'Apply filter' }).click();
+        await parentIframe.getByRole('button', { name: 'Apply filter' }).click();
 
         // Replace the try-catch block and subsequent waits with:
-        await waitForLoading(page.locator('iframe[name="iamain"]').contentFrame());
+        await waitForLoading(parentIframe);
 
         console.log('Filter applied successfully');
 
