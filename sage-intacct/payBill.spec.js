@@ -93,8 +93,25 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
     // Function to get invoice number from a specific row
     async function getInvoiceNumber(rowIndex, parentIframe) {
         try {
+            // console.log(`Getting invoice number for row index: ${rowIndex}`);
             const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
-            // First, check if the element exists
+            const element = await parentIframe.locator(selector).first();
+            return element ? await element.innerText() : null;
+        } catch (error) {
+            if (error.message.includes('Timeout')) {
+                console.log('Timeout occurred while getting invoice number. Exiting script.');
+                process.exit(1);
+            }
+            throw error;
+        }
+    }
+    async function getInvoiceNumber(rowIndex, parentIframe) {
+        try {
+            const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
+            //wait for loading
+            await waitForLoading(parentIframe);
+
+            // Check if the element exists
             const elementExists = await parentIframe.locator(selector).first().count() > 0;
 
             if (!elementExists) {
