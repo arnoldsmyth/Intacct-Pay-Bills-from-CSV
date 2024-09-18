@@ -123,20 +123,12 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
 
     while (true) {
 
-        //if filter set is true, then apply the filter set
-        if (filterSet && selectedFilter && rowIndex > 0) { //we ignore on the first pass as it was previously set
-            //select the filter set on the page
-            await selectFilterSet(parentIframe, selectedFilter);
-
-        }
-
         //get the invoice number we are processing
         invoiceNumber = await getInvoiceNumber(rowIndex, parentIframe);
         if (invoiceNumber === null) {
             console.log('No more invoice numbers available. Exiting script.');
             break; // or process.exit(0);
         }
-
         //check error file for invoice number and skip it in the browser if it exists
         const errorRows = await readCsv(errorFileName);
         if (errorRows.length > 0) {
@@ -155,7 +147,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             console.log(`Do you want to process invoice number: ${invoiceNumber}?`);
             const shouldProcessInvoice = await promptToContinue();
             if (!shouldProcessInvoice) {
-                await clearFilter(parentIframe);
+                await clearVendorFilter(parentIframe);
                 console.log('User chose to stop. Exiting script.');
                 process.exit(0);
             }
@@ -259,7 +251,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         result.reason
                     ]);
                     // Clear the filter
-                    await clearFilter(parentIframe);
+                    await clearVendorFilter(parentIframe);
                     break;
                 case 'error':
                     console.log(`Error for invoice ${invoiceNumber}: ${result.reason}`);
@@ -271,7 +263,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                         result.reason
                     ]);
                     // Clear the filter
-                    await clearFilter(parentIframe);
+                    await clearVendorFilter(parentIframe);
                     break;
                 case 'success':
                     console.log('Matching invoice row found:', result.matchingInvoiceRow);
@@ -296,7 +288,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                             error.message
                         ]);
                         rowIndex++;
-                        await clearFilter(parentIframe);
+                        await clearVendorFilter(parentIframe);
                         break;
                     }
 
@@ -329,7 +321,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                             error.message
                         ]);
                         rowIndex++;
-                        await clearFilter(parentIframe);
+                        await clearVendorFilter(parentIframe);
                         break;
                     }
 
@@ -369,7 +361,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                                 unattendedInvoiceCount = 0;
                                 const shouldContinue = await promptToContinue();
                                 if (!shouldContinue) {
-                                    await clearFilter(parentIframe);
+                                    await clearVendorFilter(parentIframe);
                                     console.log('User chose to stop. Exiting script.');
                                     process.exit(0);
                                 }
@@ -389,7 +381,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                     }
 
                     // Clear the filter
-                    await clearFilter(parentIframe);
+                    await clearVendorFilter(parentIframe);
 
                     // Reset the row index for the next iteration
                     rowIndex = 0;
@@ -405,7 +397,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
                 error.message
             ]);
             // Clear the filter
-            await clearFilter(parentIframe);
+            await clearVendorFilter(parentIframe);
         }
     }
 
@@ -709,11 +701,14 @@ async function waitForLoading(parentIframe) {
 }
 
 // Add this function at the end of the file
-async function clearFilter(parentIframe) {
+async function clearVendorFilter(parentIframe) {
     try {
         // Wait for the "Clear filter" button to appear and click it
-        await parentIframe.locator('button:has-text("Clear filter")').waitFor({ state: 'visible', timeout: 10000 });
-        await parentIframe.locator('button:has-text("Clear filter")').click();
+        // await parentIframe.locator('button:has-text("Clear filter")').waitFor({ state: 'visible', timeout: 10000 });
+        // await parentIframe.locator('button:has-text("Clear filter")').click();
+
+        await parentIframe.locator('[id="_obj__VENDORIDRANGESTART_D"]').fill('');
+        await parentIframe.getByRole('button', { name: 'Apply filter' }).click();
 
         // Wait for the loading overlay after clicking Clear filter
         await waitForLoading(parentIframe);
