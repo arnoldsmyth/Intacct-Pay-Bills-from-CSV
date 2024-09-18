@@ -90,21 +90,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         await selectFilterSet(parentIframe, selectedFilter);
 
     }
-    // Function to get invoice number from a specific row
-    async function getInvoiceNumber(rowIndex, parentIframe) {
-        try {
-            // console.log(`Getting invoice number for row index: ${rowIndex}`);
-            const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
-            const element = await parentIframe.locator(selector).first();
-            return element ? await element.innerText() : null;
-        } catch (error) {
-            if (error.message.includes('Timeout')) {
-                console.log('Timeout occurred while getting invoice number. Exiting script.');
-                process.exit(1);
-            }
-            throw error;
-        }
-    }
+
     async function getInvoiceNumber(rowIndex, parentIframe) {
         try {
             const selector = `#_obj__PAYABLES_${rowIndex}_-_obj__RECORDID`;
@@ -115,7 +101,7 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
             const elementExists = await parentIframe.locator(selector).first().count() > 0;
 
             if (!elementExists) {
-                console.error(`No more rows found at index ${rowIndex}. Returning null.`);
+                //console.error(`No more rows found at index ${rowIndex}. Returning null.`);
                 return null;
             }
 
@@ -140,8 +126,9 @@ function compareInvoiceNumbers(invoiceNumber1, invoiceNumber2) {
         //get the invoice number we are processing
         invoiceNumber = await getInvoiceNumber(rowIndex, parentIframe);
         if (invoiceNumber === null) {
-            console.log('No more invoice numbers available. Exiting script.');
-            break; // or process.exit(0);
+            console.log('Reached the end, going back to 0');
+            rowIndex = 0;
+            continue; // or process.exit(0);
         }
         //check error file for invoice number and skip it in the browser if it exists
         const errorRows = await readCsv(errorFileName);
